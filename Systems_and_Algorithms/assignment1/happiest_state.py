@@ -92,29 +92,7 @@ def sent_score(tweet_file, sent_dict):
 		if json_line.has_key('delete'):
 			continue
 
-		place = json_line['place']
-
-		if not place:
-			continue
-
-		country = place['country_code']	
-
-		if country and country != 'US':
-			continue
-
-		full_name = place['full_name']
-
-		if full_name:
-			state = full_name.split(', ')[1]
-		else:
-			location = json_line['user']['location']
-			if location:
-				state = location.split(', ')[1]
-			else:
-				continue
-
-		if len(state) != 2:
-			state = convert(state)
+		state = find_state(json_line)
 
 		if not state:
 			continue
@@ -126,10 +104,38 @@ def sent_score(tweet_file, sent_dict):
 		else:
 			state_sentiment[state] = score
 
-
 	import collections
 	sorted_sents = collections.OrderedDict(sorted(state_sentiment.items(), key=lambda k:k[1], reverse=True))
 	print str(sorted_sents.keys()[0])
+
+
+def find_state(json_line):
+	place = json_line['place']
+
+	if not place:
+		return None
+
+	country = place['country_code']
+
+	if country and country != 'US':
+		return None
+
+	full_name = place['full_name']
+
+	if full_name:
+		state = full_name.split(', ')[1]
+	else:
+		location = json_line['user']['location']
+		if location:
+			state = location.split(', ')[1]
+		else:
+			return None
+
+	if len(state) != 2:
+		state = convert(state)
+
+	if not state:
+		return None
 
 
 def tweet_score(json_line, sent_dict):
